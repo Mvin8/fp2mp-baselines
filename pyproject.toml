@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=64.0", "setuptools_scm[toml]>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fp2mp-eval"
+dynamic = ["version"]
+authors = [{ name = "Vasilii Starikov", email = "vasilstar97@gmail.com" }]
+description = "Evaluating solutions of ill-defined problems using llm-as-a-judge approach."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENCE" }
+
+dependencies = [
+    "python-dotenv",
+    "langchain",
+    "langchain-openai",
+    "langchain-community",
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+]
+
+[tool.setuptools.packages.find]
+include = ["fp2mp_eval*"]
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "no-local-version"
+
+[project.optional-dependencies]
+dev = []
+
+[project.urls]
+"Repository" = "https://github.com/vasilstar97/fp2mp-eval"
+"Bug Tracker" = "https://github.com/vasilstar97/fp2mp-eval/issues"
+
+[tool.black]
+line-length = 120
+target-version = ['py310']
+
+[tool.pylint.format]
+max-line-length = 120
+expected-line-ending-format = "LF"
+
+[tool.pylint.main]
+extension-pkg-allow-list = ["pydantic"]
+
+[tool.pycodestyle]
+max-line-length = 120
+
+[tool.isort]
+lines_after_imports = 2
+multi_line_output = 3
+line_length = 120
+include_trailing_comma = true

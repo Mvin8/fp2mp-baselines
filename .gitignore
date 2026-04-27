@@ -1,0 +1,10 @@
+# virtual environment
+.env
+.venv
+venv
+env
+
+# packaging etc
+*.egg-info
+build
+__pycache__
