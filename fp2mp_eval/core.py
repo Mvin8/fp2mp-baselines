@@ -9,7 +9,7 @@ from ._config import config
 
 class FP2MPEval():
 
-    def __init__(self, model : str = 'deepseek/deepseek-v3.2', temperature : float = 0.5, n_judges : int = 10, **kwargs):
+    def __init__(self, model : str = 'openai/gpt-4.1', temperature : float = 0.5, n_judges : int = 10, **kwargs):
         self._llm = ChatOpenAI(
             model=model,
             base_url=config.base_url,
@@ -23,31 +23,6 @@ class FP2MPEval():
     def llm(self) -> ChatOpenAI:
         return self._llm.with_structured_output(Evaluation)
     
-    def evaluations_to_df(self, evaluations : list[Evaluation]) -> pd.DataFrame:
-        data = []
-
-        for evaluation in evaluations:
-            d = {}
-            dump = evaluation.model_dump()
-            for k,v in dump.items():
-                d[k] = v['score']
-            data.append(d)
-            
-        return pd.DataFrame(data)
-    
-    def evaluations_to_long_df(self, evaluations : list[Evaluation]) -> pd.DataFrame:
-        data = []
-
-        for judge, evaluation in enumerate(evaluations):
-            for indicator, v in evaluation.model_dump().items():
-                data.append({
-                    'judge': judge,
-                    'indicator': indicator,
-                    **v
-                })
-
-        return pd.DataFrame(data)
-    
     def evaluate_case(self, case : tuple[str,str], max_workers : int = 2) -> list[Evaluation]:
         problem, solution = case
         message = EVAL_PROMPT.format(problem=problem, solution=solution)
@@ -60,9 +35,29 @@ class FP2MPEval():
 
         return results
     
-    # def evaluate_cases(self, cases : list[tuple[str,str]], max_workers : int = 10) -> list[list[Evaluation]]:
+    @staticmethod
+    def evaluations_to_df(evaluations : list[Evaluation]) -> pd.DataFrame:
+        data = []
 
-    #     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-    #         results = list(executor.map(self.evaluate_case, cases))
+        for evaluation in evaluations:
+            d = {}
+            dump = evaluation.model_dump()
+            for k,v in dump.items():
+                d[k] = v['score']
+            data.append(d)
+            
+        return pd.DataFrame(data)
+    
+    @staticmethod
+    def evaluations_to_long_df(evaluations : list[Evaluation]) -> pd.DataFrame:
+        data = []
 
-    #     return results
+        for judge, evaluation in enumerate(evaluations):
+            for indicator, v in evaluation.model_dump().items():
+                data.append({
+                    'judge': judge,
+                    'indicator': indicator,
+                    **v
+                })
+
+        return pd.DataFrame(data)
