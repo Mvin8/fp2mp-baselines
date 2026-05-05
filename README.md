@@ -1,15 +1,83 @@
-# FP2MP-Eval
+# FP2MP Baselines
 
-Evaluating solutions of ill-defined problems using llm-as-a-judge approach.
+LangGraph-бейзлайны для text-to-text задач FP2MP.
 
-## Quickstart
+## Установка
 
-work in progress
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
 
-## Development
+Переменные окружения для LLM:
 
-After cloning the repository, please, do the following:
+```bash
+export FP2MP_API_KEY="..."
+export FP2MP_CHAT_URL="..."
+```
 
-- `python3 -m venv .venv` - create venv
-- `source .venv/bin/activate` - activate venv
-- `pip install -e .` - install requirements
+## Архитектуры
+
+- `SingleAgentBaseline`
+- `CotBaseline`
+- `ReactBaseline` с `ddgs_tool`
+- `GeneratorCriticBaseline`
+- `BlackboardBaseline`
+
+Все бейзлайны принимают текст на вход и возвращают текст на выход. Полный результат доступен через `invoke_state(...)`; в `state["log"]` сохраняются сообщения агентов, ответы модели, token usage и tool calls, если провайдер их вернул.
+
+## Пример
+
+```python
+from langchain_openai import ChatOpenAI
+from fp2mp_baselines import SingleAgentBaseline
+from fp2mp_baselines.config import config
+
+
+llm = ChatOpenAI(
+    model="deepseek/deepseek-v4-flash",
+    base_url=config.base_url,
+    api_key=config.api_key,
+    temperature=0.5,
+)
+
+task = "Город Санкт-Петербург. Разработай план уплотнения городского центра."
+
+baseline = SingleAgentBaseline(llm=llm)
+state = baseline.invoke_state(task)
+
+print(state["output"])
+print(state["log"])
+```
+
+Замена архитектуры:
+
+```python
+from fp2mp_baselines import CotBaseline, ReactBaseline, GeneratorCriticBaseline, BlackboardBaseline
+
+cot = CotBaseline(llm=llm)
+react = ReactBaseline(llm=llm)
+generator_critic = GeneratorCriticBaseline(generator_llm=llm)
+blackboard = BlackboardBaseline(llm=llm, iterations=3)
+```
+
+## Структура
+
+- `fp2mp_baselines/single_agent/` - single-agent baseline
+- `fp2mp_baselines/cot/` - Chain-of-Thought style baseline
+- `fp2mp_baselines/react/` - ReAct baseline с поиском DuckDuckGo
+- `fp2mp_baselines/generator_critic/` - Generator-Critic baseline
+- `fp2mp_baselines/blackboard/` - Blackboard baseline
+- `fp2mp_baselines/state.py` - общие state-типы
+- `fp2mp_baselines/graph_utils.py` - общее логирование LLM-вызовов
+
+## Примеры
+
+Ноутбуки лежат в `examples/`:
+
+- `1_single_agent_baseline.ipynb`
+- `2_cot_baseline.ipynb`
+- `3_react_baseline.ipynb`
+- `4_generator_critic_baseline.ipynb`
+- `5_blackboard_baseline.ipynb`

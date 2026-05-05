@@ -3,21 +3,23 @@ requires = ["setuptools>=64.0", "setuptools_scm[toml]>=8.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "fp2mp-eval"
+name = "fp2mp-baselines"
 dynamic = ["version"]
 authors = [{ name = "Vasilii Starikov", email = "vasilstar97@gmail.com" }]
-description = "Evaluating solutions of ill-defined problems using llm-as-a-judge approach."
+description = "LangGraph baselines for text-to-text FP2MP planning tasks."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { file = "LICENCE" }
+license = { text = "BSD-3-Clause" }
 
 dependencies = [
-    "pandas",
-    "python-dotenv",
+    "ddgs",
     "langchain",
-    "langchain-openai",
     "langchain-community",
-    "pingouin",
+    "python-dotenv",
+    "langchain-core",
+    "langchain-openai",
+    "langgraph",
+    "pydantic",
 ]
 
 classifiers = [
@@ -28,7 +30,7 @@ classifiers = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["fp2mp_eval*"]
+include = ["fp2mp_baselines*"]
 
 [tool.setuptools_scm]
 version_scheme = "post-release"
@@ -38,8 +40,8 @@ local_scheme = "no-local-version"
 dev = []
 
 [project.urls]
-"Repository" = "https://github.com/vasilstar97/fp2mp-eval"
-"Bug Tracker" = "https://github.com/vasilstar97/fp2mp-eval/issues"
+"Repository" = "https://github.com/vasilstar97/fp2mp-baselines"
+"Bug Tracker" = "https://github.com/vasilstar97/fp2mp-baselines/issues"
 
 [tool.black]
 line-length = 120
