@@ -2,7 +2,7 @@ from typing import Any
 
 from langchain_core.language_models.chat_models import BaseChatModel
 
-from ..state import TextToTextState
+from ..state import BaseState
 from .graph import build_single_agent_graph
 
 
@@ -15,11 +15,7 @@ class SingleAgentBaseline:
     ) -> None:
         self.graph = build_single_agent_graph(llm=llm)
 
-    def invoke(self, text: str, config: dict[str, Any] | None = None) -> str:
-        result = self.invoke_state(text, config=config)
-        return result["output"]
-
-    def invoke_state(self, text: str, config: dict[str, Any] | None = None) -> TextToTextState:
+    def invoke_state(self, text: str, config: dict[str, Any] | None = None) -> BaseState:
         return self.graph.invoke({"input": text, "output": "", "log": []}, config=config)
 
     def stream(self, text: str, config: dict[str, Any] | None = None):

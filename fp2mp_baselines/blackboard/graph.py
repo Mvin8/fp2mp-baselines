@@ -1,12 +1,12 @@
 from typing import Any
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import BaseModel, Field
 
-from ..graph_utils import build_llm_log_entry, message_content_to_text, message_to_log_dict
+from ..graph_utils import build_message_log, message_content_to_text
 from ..state import BlackboardState
 from .board import BaseNote, Board, get_id
 from .prompts import (
@@ -56,12 +56,10 @@ def _worker_prompt(worker: Worker, question: str) -> str:
 def _invoke_llm(
     llm: BaseChatModel,
     *,
-    agent_id: str,
     prompt: str,
     board: Board,
     response_format: type[BaseModel] | None = None,
-    metadata: dict[str, Any] | None = None,
-) -> tuple[Any, dict[str, Any]]:
+) -> tuple[Any, list[BaseMessage]]:
     messages = [
         HumanMessage(content=prompt),
         HumanMessage(content=board.to_str()),
@@ -70,23 +68,11 @@ def _invoke_llm(
     response = model.invoke(messages)
     if response_format is not None:
         result = response
-        log_entry = {
-            "agent": agent_id,
-            "event": "llm_call",
-            "messages": [message_to_log_dict(message) for message in messages],
-            "response": {
-                "type": "structured",
-                "data": response.model_dump(),
-            },
-            "metadata": metadata or {},
-        }
+        log = messages
     else:
         result = message_content_to_text(response.content)
-        log_entry = {
-            **build_llm_log_entry(agent_id, messages, response),
-            "metadata": metadata or {},
-        }
-    return result, log_entry
+        log = build_message_log(messages, response)
+    return result, log
 
 
 def _run_blackboard(
@@ -96,7 +82,7 @@ def _run_blackboard(
     iterations: int,
 ) -> BlackboardState:
     board = Board()
-    log: list[dict[str, Any]] = []
+    log: list[BaseMessage] = []
 
     planner = Worker(
         prompt=PLANNER_PROMPT,
@@ -124,22 +110,16 @@ def _run_blackboard(
     )
 
     workers = {worker.id: worker for worker in [planner, critic, cleaner, decider]}
-    controller_id = get_id()
-    controller_metadata = {
-        "id": controller_id,
-        "role_name": "Контроллер",
-        "workers": [
-            {
-                "id": worker.id,
-                "role_name": worker.role_name,
-                "role_description": worker.role_description,
-            }
-            for worker in workers.values()
-        ],
-        "question": question,
-    }
+    controller_workers = [
+        {
+            "id": worker.id,
+            "role_name": worker.role_name,
+            "role_description": worker.role_description,
+        }
+        for worker in workers.values()
+    ]
     controller_prompt = CONTROLLER_PROMPT.format(
-        workers=controller_metadata["workers"],
+        workers=controller_workers,
         question=question,
     )
 
@@ -147,34 +127,24 @@ def _run_blackboard(
     for _ in range(iterations):
         controller_response, controller_log = _invoke_llm(
             llm,
-            agent_id=controller_id,
             prompt=controller_prompt,
             board=board,
             response_format=ControllerResponse,
-            metadata=controller_metadata,
         )
-        log.append(controller_log)
+        log.extend(controller_log)
 
         for worker_id in controller_response.agents_ids:
             worker = workers.get(worker_id)
             if worker is None:
                 continue
 
-            worker_metadata = {
-                "id": worker.id,
-                "role_name": worker.role_name,
-                "role_description": worker.role_description,
-                "question": question,
-            }
             response, worker_log = _invoke_llm(
                 llm,
-                agent_id=worker.id,
                 prompt=_worker_prompt(worker, question),
                 board=board,
                 response_format=worker.response_format,
-                metadata=worker_metadata,
             )
-            log.append(worker_log)
+            log.extend(worker_log)
 
             if worker == cleaner:
                 board.remove_notes(response.notes_ids)
@@ -192,19 +162,12 @@ def _run_blackboard(
         if is_final:
             break
 
-    summarizer_id = get_id()
     output, summarizer_log = _invoke_llm(
         llm,
-        agent_id=summarizer_id,
         prompt=SUMMARIZER_PROMPT.format(question=question),
         board=board,
-        metadata={
-            "id": summarizer_id,
-            "role_name": "Суммаризатор",
-            "question": question,
-        },
     )
-    log.append(summarizer_log)
+    log.extend(summarizer_log)
 
     return {
         "input": question,

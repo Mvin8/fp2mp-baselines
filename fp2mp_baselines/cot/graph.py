@@ -3,7 +3,7 @@ from langchain_core.messages import HumanMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from ..graph_utils import build_llm_log_entry, message_content_to_text
+from ..graph_utils import build_message_log, message_content_to_text
 from ..state import CotState
 from .prompts import COT_FINAL_HUMAN_PROMPT, COT_REASONING_HUMAN_PROMPT
 
@@ -35,7 +35,7 @@ def build_cot_graph(
             "reasoning_summary": reasoning_summary,
             "log": [
                 *state.get("log", []),
-                build_llm_log_entry(COT_REASONING_NODE, messages, response),
+                *build_message_log(messages, response),
             ],
         }
 
@@ -55,7 +55,7 @@ def build_cot_graph(
             "reasoning_summary": state["reasoning_summary"],
             "log": [
                 *state.get("log", []),
-                build_llm_log_entry(COT_FINAL_NODE, messages, response),
+                *build_message_log(messages, response),
             ],
         }
 

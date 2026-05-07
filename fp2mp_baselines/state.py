@@ -1,47 +1,34 @@
 from typing import Any, TypedDict
 
-
-class AgentLogEntry(TypedDict, total=False):
-    """Structured trace entry for one agent action."""
-
-    agent: str
-    event: str
-    messages: list[dict[str, Any]]
-    response: dict[str, Any]
-    usage_metadata: dict[str, Any]
-    response_metadata: dict[str, Any]
-    tool_calls: list[dict[str, Any]]
-    invalid_tool_calls: list[dict[str, Any]]
+from langchain_core.messages import BaseMessage
 
 
-class TextToTextState(TypedDict):
-    """LangGraph state for text input, text output, and agent trace."""
-
+class BaseState(TypedDict):
     input: str
     output: str
-    log: list[AgentLogEntry]
+    log: list[BaseMessage]
 
 
-class CotState(TextToTextState, total=False):
+class CotState(BaseState, total=False):
     """State for CoT-style baselines with an explicit public reasoning summary."""
 
     reasoning_summary: str
 
 
-class ReactState(TextToTextState, total=False):
+class ReactState(BaseState, total=False):
     """State for ReAct baselines."""
 
     messages: list[dict[str, Any]]
 
 
-class GeneratorCriticState(TextToTextState, total=False):
+class GeneratorCriticState(BaseState, total=False):
     """State for Generator-Critic baselines."""
 
     draft: str
     critique: str
 
 
-class BlackboardState(TextToTextState, total=False):
+class BlackboardState(BaseState, total=False):
     """State for Blackboard baselines."""
 
     board: str
@@ -50,10 +37,9 @@ class BlackboardState(TextToTextState, total=False):
 
 
 __all__ = [
-    "AgentLogEntry",
+    "BaseState",
     "BlackboardState",
     "CotState",
     "GeneratorCriticState",
     "ReactState",
-    "TextToTextState",
 ]

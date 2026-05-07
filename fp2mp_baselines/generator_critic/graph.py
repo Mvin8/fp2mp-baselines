@@ -3,7 +3,7 @@ from langchain_core.messages import HumanMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from ..graph_utils import build_llm_log_entry, message_content_to_text
+from ..graph_utils import build_message_log, message_content_to_text
 from ..state import GeneratorCriticState
 from .prompts import CRITIC_HUMAN_PROMPT, GENERATOR_DRAFT_HUMAN_PROMPT, GENERATOR_FINAL_HUMAN_PROMPT
 
@@ -35,7 +35,7 @@ def build_generator_critic_graph(
             "critique": state.get("critique", ""),
             "log": [
                 *state.get("log", []),
-                build_llm_log_entry(GENERATOR_DRAFT_NODE, messages, response),
+                *build_message_log(messages, response),
             ],
         }
 
@@ -57,7 +57,7 @@ def build_generator_critic_graph(
             "critique": critique,
             "log": [
                 *state.get("log", []),
-                build_llm_log_entry(CRITIC_NODE, messages, response),
+                *build_message_log(messages, response),
             ],
         }
 
@@ -79,7 +79,7 @@ def build_generator_critic_graph(
             "critique": state["critique"],
             "log": [
                 *state.get("log", []),
-                build_llm_log_entry(GENERATOR_FINAL_NODE, messages, response),
+                *build_message_log(messages, response),
             ],
         }
 

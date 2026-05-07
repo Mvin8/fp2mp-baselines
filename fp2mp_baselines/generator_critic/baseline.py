@@ -20,10 +20,6 @@ class GeneratorCriticBaseline:
             critic_llm=critic_llm,
         )
 
-    def invoke(self, text: str, config: dict[str, Any] | None = None) -> str:
-        result = self.invoke_state(text, config=config)
-        return result["output"]
-
     def invoke_state(self, text: str, config: dict[str, Any] | None = None) -> GeneratorCriticState:
         return self.graph.invoke({"input": text, "output": "", "log": [], "draft": "", "critique": ""}, config=config)
 

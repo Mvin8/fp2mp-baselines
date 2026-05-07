@@ -22,10 +22,6 @@ class ReactBaseline:
             tools=tools or [ddgs_tool],
         )
 
-    def invoke(self, text: str, config: dict[str, Any] | None = None) -> str:
-        result = self.invoke_state(text, config=config)
-        return result["output"]
-
     def invoke_state(self, text: str, config: dict[str, Any] | None = None) -> ReactState:
         return self.graph.invoke({"input": text, "output": "", "log": [], "messages": []}, config=config)
 

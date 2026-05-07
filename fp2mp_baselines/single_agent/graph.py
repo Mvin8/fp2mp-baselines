@@ -3,8 +3,8 @@ from langchain_core.messages import HumanMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from ..graph_utils import build_llm_log_entry, message_content_to_text
-from ..state import TextToTextState
+from ..graph_utils import build_message_log, message_content_to_text
+from ..state import BaseState
 
 
 SINGLE_AGENT_NODE = "single_agent"
@@ -22,7 +22,7 @@ def build_single_agent_graph(
         {"input": "<user task>", "output": "<model answer>", "log": [...]}
     """
 
-    def single_agent_node(state: TextToTextState) -> TextToTextState:
+    def single_agent_node(state: BaseState) -> BaseState:
         messages = [HumanMessage(content=state["input"])]
         response = llm.invoke(messages)
         return {
@@ -30,11 +30,11 @@ def build_single_agent_graph(
             "output": message_content_to_text(response.content),
             "log": [
                 *state.get("log", []),
-                build_llm_log_entry(SINGLE_AGENT_NODE, messages, response),
+                *build_message_log(messages, response),
             ],
         }
 
-    graph = StateGraph(TextToTextState)
+    graph = StateGraph(BaseState)
     graph.add_node(SINGLE_AGENT_NODE, single_agent_node)
     graph.add_edge(START, SINGLE_AGENT_NODE)
     graph.add_edge(SINGLE_AGENT_NODE, END)

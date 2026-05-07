@@ -15,10 +15,6 @@ class CotBaseline:
     ) -> None:
         self.graph = build_cot_graph(llm=llm)
 
-    def invoke(self, text: str, config: dict[str, Any] | None = None) -> str:
-        result = self.invoke_state(text, config=config)
-        return result["output"]
-
     def invoke_state(self, text: str, config: dict[str, Any] | None = None) -> CotState:
         return self.graph.invoke({"input": text, "output": "", "log": [], "reasoning_summary": ""}, config=config)
 
