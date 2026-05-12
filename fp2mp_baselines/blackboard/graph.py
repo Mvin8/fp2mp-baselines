@@ -14,6 +14,8 @@ from .prompts import (
     CONTROLLER_PROMPT,
     CRITIC_PROMPT,
     DECIDER_PROMPT,
+    EXPERT_PROMPT,
+    GENERATOR_PROMPT,
     PLANNER_PROMPT,
     SUMMARIZER_PROMPT,
     WORKER_PROMPT,
@@ -31,6 +33,19 @@ class CleanerResponse(BaseModel):
     notes_ids: list[str] = Field(default_factory=list, description="Список ID записей к удалению")
 
 
+class GeneratorRole(BaseModel):
+    name: str = Field(description="Название экспертной роли")
+    description: str = Field(description="Краткое описание экспертизы роли")
+
+
+class GeneratorResponse(BaseModel):
+    roles: list[GeneratorRole] = Field(
+        min_length=1,
+        max_length=3,
+        description="Список экспертных ролей для решения задачи",
+    )
+
+
 class DeciderResponse(BaseModel):
     note: BaseNote = Field(description="Запись для добавления на доску")
     is_final: bool = Field(default=False, description="Сигнал о завершении процесса работы над задачей")
@@ -38,6 +53,7 @@ class DeciderResponse(BaseModel):
 
 class Worker(BaseModel):
     id: str = Field(default_factory=get_id)
+    role_type: str
     role_name: str
     role_description: str
     prompt: str
@@ -62,7 +78,7 @@ def _invoke_llm(
 ) -> tuple[Any, list[BaseMessage]]:
     messages = [
         HumanMessage(content=prompt),
-        HumanMessage(content=board.to_str()),
+        *board.to_messages(),
     ]
     model = llm.with_structured_output(response_format) if response_format is not None else llm
     response = model.invoke(messages)
@@ -75,6 +91,69 @@ def _invoke_llm(
     return result, log
 
 
+def _build_builtin_workers() -> list[Worker]:
+    return [
+        Worker(
+            role_type="planner",
+            prompt=PLANNER_PROMPT,
+            role_name="Планировщик",
+            role_description="Разрабатывает пошаговый план решения задачи на основе содержимого доски",
+            response_format=BaseNote,
+        ),
+        Worker(
+            role_type="critic",
+            prompt=CRITIC_PROMPT,
+            role_name="Критик",
+            role_description="Выявляет ошибочные или вводящие в заблуждение записи на доске",
+            response_format=BaseNote,
+        ),
+        Worker(
+            role_type="cleaner",
+            prompt=CLEANER_PROMPT,
+            role_name="Уборщик",
+            role_description="Анализирует доску, выявляет и удаляет бесполезные или избыточные записи",
+            response_format=CleanerResponse,
+        ),
+        Worker(
+            role_type="decider",
+            prompt=DECIDER_PROMPT,
+            role_name="Арбитр",
+            role_description="Оценивает полноту информации. Останавливает либо инициирует продолжение обсуждения",
+            response_format=DeciderResponse,
+        ),
+    ]
+
+
+def _build_expert_workers(question: str, llm: BaseChatModel, board: Board) -> tuple[list[Worker], list[BaseMessage]]:
+    response, log = _invoke_llm(
+        llm,
+        prompt=GENERATOR_PROMPT.format(question=question),
+        board=board,
+        response_format=GeneratorResponse,
+    )
+    workers = [
+        Worker(
+            role_type="expert",
+            role_name=role.name,
+            role_description=role.description,
+            prompt=EXPERT_PROMPT,
+            response_format=BaseNote,
+        )
+        for role in response.roles
+    ]
+    return workers, log
+
+
+def _format_workers(workers: dict[str, Worker]) -> str:
+    return "\n".join(
+        (
+            f"- ID: {worker.id}; роль: {worker.role_name}; "
+            f"тип: {worker.role_type}; описание: {worker.role_description}"
+        )
+        for worker in workers.values()
+    )
+
+
 def _run_blackboard(
     question: str,
     llm: BaseChatModel,
@@ -84,44 +163,11 @@ def _run_blackboard(
     board = Board()
     log: list[BaseMessage] = []
 
-    planner = Worker(
-        prompt=PLANNER_PROMPT,
-        role_name="Планировщик",
-        role_description="Разрабатывает пошаговый план решения задачи на основе содержимого доски",
-        response_format=BaseNote,
-    )
-    critic = Worker(
-        prompt=CRITIC_PROMPT,
-        role_name="Критик",
-        role_description="Выявляет ошибочные или вводящие в заблуждение записи на доске",
-        response_format=BaseNote,
-    )
-    cleaner = Worker(
-        prompt=CLEANER_PROMPT,
-        role_name="Уборщик",
-        role_description="Анализирует доску, выявляет и удаляет бесполезные или избыточные записи",
-        response_format=CleanerResponse,
-    )
-    decider = Worker(
-        prompt=DECIDER_PROMPT,
-        role_name="Арбитр",
-        role_description="Оценивает полноту информации. Останавливает либо инициирует продолжение обсуждения",
-        response_format=DeciderResponse,
-    )
-
-    workers = {worker.id: worker for worker in [planner, critic, cleaner, decider]}
-    controller_workers = [
-        {
-            "id": worker.id,
-            "role_name": worker.role_name,
-            "role_description": worker.role_description,
-        }
-        for worker in workers.values()
-    ]
-    controller_prompt = CONTROLLER_PROMPT.format(
-        workers=controller_workers,
-        question=question,
-    )
+    expert_workers, generator_log = _build_expert_workers(question, llm, board)
+    log.extend(generator_log)
+    all_workers = [*_build_builtin_workers(), *expert_workers]
+    workers = {worker.id: worker for worker in all_workers}
+    controller_prompt = CONTROLLER_PROMPT.format(workers=_format_workers(workers), question=question)
 
     is_final = False
     for _ in range(iterations):
@@ -146,15 +192,15 @@ def _run_blackboard(
             )
             log.extend(worker_log)
 
-            if worker == cleaner:
+            if worker.role_type == "cleaner":
                 board.remove_notes(response.notes_ids)
                 continue
 
-            if worker == decider:
-                board.add_note(response.note, worker.id)
+            if worker.role_type == "decider":
+                board.add_note(response.note, worker.id, worker.role_name)
                 is_final = response.is_final
             else:
-                board.add_note(response, worker.id)
+                board.add_note(response, worker.id, worker.role_name)
 
             if is_final:
                 break
