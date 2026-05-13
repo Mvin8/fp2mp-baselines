@@ -9,22 +9,22 @@ def get_id(length: int = 6) -> str:
 
 
 class BaseNote(BaseModel):
-    """Запись для добавления на доску."""
+    """A note to add to the blackboard."""
 
-    content: str = Field(description="Содержимое записи")
+    content: str = Field(description="Note content")
 
 
 class BaseRole(BaseModel):
-    """Роль агента для работы с общей доской."""
+    """An agent role for working with the shared blackboard."""
 
-    name: str = Field(description="Название роли")
-    description: str = Field(description="Краткое описание экспертизы роли")
+    name: str = Field(description="Role name")
+    description: str = Field(description="Short description of the role's expertise")
 
 
 class Note(BaseNote):
-    id: str = Field(default="", description="ID записи")
-    author_id: str = Field(description="ID автора записи")
-    author_role: str = Field(default="", description="Роль автора записи")
+    id: str = Field(default="", description="Note ID")
+    author_id: str = Field(description="Author ID")
+    author_role: str = Field(default="", description="Author role")
 
     @model_validator(mode="after")
     def _set_id(self):
@@ -34,7 +34,7 @@ class Note(BaseNote):
 
 
 class Board(BaseModel):
-    notes: list[Note] = Field(default_factory=list, description="Записи на доске")
+    notes: list[Note] = Field(default_factory=list, description="Blackboard notes")
 
     def add_note(self, base_note: BaseNote, author_id: str, author_role: str = "") -> str:
         note = Note(author_id=author_id, author_role=author_role, **base_note.model_dump())
@@ -46,24 +46,24 @@ class Board(BaseModel):
 
     def to_messages(self) -> list[HumanMessage]:
         if not self.notes:
-            return [HumanMessage(content="На общей доске пока нет сообщений.")]
+            return [HumanMessage(content="There are no messages on the shared blackboard yet.")]
 
         messages: list[HumanMessage] = []
         for index, note in enumerate(self.notes, start=1):
             messages.append(
                 HumanMessage(
                     content=(
-                        f"Сообщение на общей доске #{index}\n"
+                        f"Shared blackboard message #{index}\n"
                         f"ID: {note.id}\n"
-                        f"Автор: {note.author_role or 'неизвестная роль'} ({note.author_id})\n"
-                        f"Содержание:\n{note.content}"
+                        f"Author: {note.author_role or 'unknown role'} ({note.author_id})\n"
+                        f"Content:\n{note.content}"
                     )
                 )
             )
         return messages
 
     def to_str(self) -> str:
-        return "Содержимое доски:\n" + str([note.model_dump() for note in self.notes])
+        return "Blackboard contents:\n" + str([note.model_dump() for note in self.notes])
 
 
 __all__ = ["BaseNote", "BaseRole", "Board", "Note", "get_id"]

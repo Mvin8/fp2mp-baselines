@@ -26,29 +26,29 @@ BLACKBOARD_NODE = "blackboard"
 
 
 class ControllerResponse(BaseModel):
-    agents_ids: list[str] = Field(min_length=1, description="Упорядоченный список ID агентов")
+    agents_ids: list[str] = Field(min_length=1, description="Ordered list of agent IDs")
 
 
 class CleanerResponse(BaseModel):
-    notes_ids: list[str] = Field(default_factory=list, description="Список ID записей к удалению")
+    notes_ids: list[str] = Field(default_factory=list, description="List of note IDs to remove")
 
 
 class GeneratorRole(BaseModel):
-    name: str = Field(description="Название экспертной роли")
-    description: str = Field(description="Краткое описание экспертизы роли")
+    name: str = Field(description="Expert role name")
+    description: str = Field(description="Short description of the role's expertise")
 
 
 class GeneratorResponse(BaseModel):
     roles: list[GeneratorRole] = Field(
         min_length=1,
         max_length=3,
-        description="Список экспертных ролей для решения задачи",
+        description="List of expert roles for solving the task",
     )
 
 
 class DeciderResponse(BaseModel):
-    note: BaseNote = Field(description="Запись для добавления на доску")
-    is_final: bool = Field(default=False, description="Сигнал о завершении процесса работы над задачей")
+    note: BaseNote = Field(description="Note to add to the blackboard")
+    is_final: bool = Field(default=False, description="Signal that the task-solving process is complete")
 
 
 class Worker(BaseModel):
@@ -96,29 +96,29 @@ def _build_builtin_workers() -> list[Worker]:
         Worker(
             role_type="planner",
             prompt=PLANNER_PROMPT,
-            role_name="Планировщик",
-            role_description="Разрабатывает пошаговый план решения задачи на основе содержимого доски",
+            role_name="Planner",
+            role_description="Develops a step-by-step plan for solving the task based on the blackboard contents",
             response_format=BaseNote,
         ),
         Worker(
             role_type="critic",
             prompt=CRITIC_PROMPT,
-            role_name="Критик",
-            role_description="Выявляет ошибочные или вводящие в заблуждение записи на доске",
+            role_name="Critic",
+            role_description="Identifies incorrect or misleading notes on the blackboard",
             response_format=BaseNote,
         ),
         Worker(
             role_type="cleaner",
             prompt=CLEANER_PROMPT,
-            role_name="Уборщик",
-            role_description="Анализирует доску, выявляет и удаляет бесполезные или избыточные записи",
+            role_name="Cleaner",
+            role_description="Analyzes the blackboard, identifies useless or redundant notes, and removes them",
             response_format=CleanerResponse,
         ),
         Worker(
             role_type="decider",
             prompt=DECIDER_PROMPT,
-            role_name="Арбитр",
-            role_description="Оценивает полноту информации. Останавливает либо инициирует продолжение обсуждения",
+            role_name="Arbiter",
+            role_description="Evaluates information completeness and either stops or continues the discussion",
             response_format=DeciderResponse,
         ),
     ]
@@ -147,8 +147,8 @@ def _build_expert_workers(question: str, llm: BaseChatModel, board: Board) -> tu
 def _format_workers(workers: dict[str, Worker]) -> str:
     return "\n".join(
         (
-            f"- ID: {worker.id}; роль: {worker.role_name}; "
-            f"тип: {worker.role_type}; описание: {worker.role_description}"
+            f"- ID: {worker.id}; role: {worker.role_name}; "
+            f"type: {worker.role_type}; description: {worker.role_description}"
         )
         for worker in workers.values()
     )

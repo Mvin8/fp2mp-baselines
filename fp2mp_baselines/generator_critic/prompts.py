@@ -1,28 +1,28 @@
-GENERATOR_DRAFT_HUMAN_PROMPT = """Сгенерируй черновой ответ на задачу пользователя.
+GENERATOR_DRAFT_HUMAN_PROMPT = """Generate a draft answer for the user's task.
 
-Задача:
+Task:
 {input}"""
 
 
-CRITIC_HUMAN_PROMPT = """Проверь черновой ответ на задачу пользователя.
-Найди слабые места, пропуски, противоречия и возможности улучшения.
+CRITIC_HUMAN_PROMPT = """Review the draft answer for the user's task.
+Identify weaknesses, omissions, contradictions, and opportunities for improvement.
 
-Задача:
+Task:
 {input}
 
-Черновой ответ:
+Draft answer:
 {draft}"""
 
 
-GENERATOR_FINAL_HUMAN_PROMPT = """Сформируй финальный ответ пользователю, учитывая критику.
+GENERATOR_FINAL_HUMAN_PROMPT = """Produce the final answer for the user, taking the critique into account.
 
-Задача:
+Task:
 {input}
 
-Черновой ответ:
+Draft answer:
 {draft}
 
-Критика:
+Critique:
 {critique}"""
 
 

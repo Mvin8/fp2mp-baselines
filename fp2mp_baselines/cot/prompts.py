@@ -1,17 +1,17 @@
-COT_REASONING_HUMAN_PROMPT = """Сформируй reasoning для решения задачи.
-Выдели допущения, ограничения, ключевые факторы, план решения и проверки.
+COT_REASONING_HUMAN_PROMPT = """Produce reasoning for solving the task.
+Highlight assumptions, constraints, key factors, the solution plan, and verification steps.
 
-Задача:
+Task:
 {input}"""
 
 
-COT_FINAL_HUMAN_PROMPT = """Задача пользователя:
+COT_FINAL_HUMAN_PROMPT = """User task:
 {input}
 
 Reasoning:
 {reasoning_summary}
 
-Сформируй финальный ответ пользователю."""
+Produce the final answer for the user."""
 
 
 __all__ = ["COT_FINAL_HUMAN_PROMPT", "COT_REASONING_HUMAN_PROMPT"]

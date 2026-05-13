@@ -7,18 +7,18 @@ from langchain_core.messages import BaseMessage, HumanMessage
 from .graph_utils import build_message_log, message_content_to_text
 
 
-VOTE_TIE_BREAKER_PROMPT = """Выбери итоговый ответ по результатам голосования нескольких независимых агентов.
+VOTE_TIE_BREAKER_PROMPT = """Choose the final answer based on the votes of several independent agents.
 
-Правила:
-- группируй семантически одинаковые ответы как один вариант;
-- выбери вариант, который поддерживает большинство агентов;
-- если явного большинства нет, выбери самый полный и обоснованный ответ;
-- верни только итоговый ответ, без пояснения процедуры голосования.
+Rules:
+- group semantically equivalent answers as one option;
+- choose the option supported by the majority of agents;
+- if there is no clear majority, choose the most complete and well-justified answer;
+- return only the final answer, without explaining the voting procedure.
 
-Задача:
+Task:
 {input}
 
-Ответы агентов:
+Agent responses:
 {responses}"""
 
 
@@ -34,7 +34,7 @@ def normalize_vote(text: str) -> str:
 
 
 def format_agent_responses(responses: list[str]) -> str:
-    return "\n\n".join(f"Агент {index + 1}:\n{response}" for index, response in enumerate(responses))
+    return "\n\n".join(f"Agent {index + 1}:\n{response}" for index, response in enumerate(responses))
 
 
 def aggregate_majority_vote(

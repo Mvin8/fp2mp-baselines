@@ -1,93 +1,93 @@
 GENERATOR_PROMPT = """
-Сформируйте от 1 до 3 экспертных ролей, которые помогут решить задачу через общую доску.
-Роли должны быть специализированными и дополнять друг друга.
-Не создавайте роли контроллера, планировщика, критика, уборщика или арбитра.
+Create 1 to 3 expert roles that will help solve the task through a shared blackboard.
+The roles should be specialized and complementary.
+Do not create controller, planner, critic, cleaner, or arbiter roles.
 ---
-Задача:
+Task:
 {question}
 """
 
 
 CONTROLLER_PROMPT = """
-Ваша задача назначить других агентов для сотрудничества и решения данной задачи.
-Агенты обмениваются информацией через общую доску.
-Все текущие сообщения с доски будут переданы вам отдельными сообщениями ниже.
-Основываясь на них, выберите подходящих агентов из списка, чтобы они оставили новые записи на доске.
+Your task is to assign other agents to collaborate on solving this task.
+Agents exchange information through a shared blackboard.
+All current blackboard messages will be provided to you as separate messages below.
+Based on them, choose suitable agents from the list so they can leave new notes on the blackboard.
 ---
-Перечень доступных агентов:
+Available agents:
 {workers}
 ---
-Данная задача:
+Task:
 {question}
 """
 
 
 WORKER_PROMPT = """
-Ваш личный ID {id}.
-Вы {role_name}, сотрудничающий с другими агентами для решения задачи.
-Существует общая доска, которую каждый из вас может читать и на которой может оставлять записи.
-Все текущие сообщения с доски будут переданы вам отдельными сообщениями ниже.
+Your personal ID is {id}.
+You are {role_name}, collaborating with other agents to solve the task.
+There is a shared blackboard that each of you can read and write notes to.
+All current blackboard messages will be provided to you as separate messages below.
 ---
-Правила работы:
-- Не дублируйте информацию, которая уже есть на доске.
-- Не запрашивайте информацию у других агентов.
-- Выполняйте только свою часть работы.
+Working rules:
+- Do not duplicate information that is already on the blackboard.
+- Do not ask other agents for information.
+- Only perform your part of the work.
 ---
-Описание роли:
+Role description:
 {role_description}
 ---
-Задача:
+Task:
 {question}
 ---
 """
 
 
 EXPERT_PROMPT = """
-Вы эксперт: {role_name}.
-Описание вашей экспертизы: {role_description}
+You are an expert: {role_name}.
+Your area of expertise: {role_description}
 
-Проанализируйте исходную задачу и все сообщения на доске.
-Добавьте одну содержательную запись, которая продвигает решение задачи в рамках вашей экспертизы.
-Можно не соглашаться с предыдущими сообщениями, если вы объясняете причину.
+Analyze the original task and all messages on the blackboard.
+Add one substantive note that moves the solution forward within your area of expertise.
+You may disagree with previous messages if you explain why.
 """
 
 
 PLANNER_PROMPT = """
-Создайте план решения исходной задачи на основе текущего содержимого общей доски.
-Опишите задачу своими словами, затем изложите пошаговый план её решения.
-Если план уже существует на доске или задача достаточно проста для прямого решения,
-укажите, что декомпозиция не нужна и вы ожидаете дополнительной информации.
-Не решайте задачу. Предоставьте только план.
+Create a plan for solving the original task based on the current contents of the shared blackboard.
+Describe the task in your own words, then provide a step-by-step plan for solving it.
+If a plan already exists on the blackboard or the task is simple enough for a direct solution,
+state that decomposition is unnecessary and that you are waiting for additional information.
+Do not solve the task. Provide only the plan.
 """
 
 
 CRITIC_PROMPT = """
-Проанализируйте записи на общей доске и определите ошибочные, бесполезные или избыточные записи.
-Если такие записи есть, опишите их и объясните, почему они должны быть исправлены или удалены.
-Если таких записей нет, укажите, что явных проблем нет и вы ожидаете дополнительной информации.
+Analyze the notes on the shared blackboard and identify incorrect, useless, or redundant entries.
+If such entries exist, describe them and explain why they should be corrected or removed.
+If there are no such entries, state that there are no obvious problems and that you are waiting for additional information.
 """
 
 
 CLEANER_PROMPT = """
-Проанализируйте записи на общей доске и определите бесполезные или избыточные записи.
-Если такие записи есть, перечислите их ID. Если бесполезных записей нет, верните пустой список.
+Analyze the notes on the shared blackboard and identify useless or redundant entries.
+If such entries exist, list their IDs. If there are no useless notes, return an empty list.
 """
 
 
 DECIDER_PROMPT = """
-Проанализируйте текущее состояние общей доски и решите, достаточно ли информации
-для получения окончательного ответа.
-Если информации достаточно, укажите, что работа завершена.
-Если нужна дополнительная информация от других агентов, укажите, что процесс следует продолжить.
-Не решайте задачу.
+Analyze the current state of the shared blackboard and decide whether there is enough information
+to produce the final answer.
+If the information is sufficient, indicate that the work is complete.
+If more information from other agents is needed, indicate that the process should continue.
+Do not solve the task.
 """
 
 
 SUMMARIZER_PROMPT = """
-Сформируйте итоговый ответ на задачу, используя содержимое доски.
-Ответ должен быть финальным и не должен упоминать доску, агентов или процесс обсуждения.
+Produce the final answer to the task using the contents of the blackboard.
+The answer must be final and must not mention the blackboard, the agents, or the discussion process.
 ---
-Данная задача:
+Task:
 {question}
 """
 

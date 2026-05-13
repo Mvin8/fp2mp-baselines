@@ -1,11 +1,11 @@
-DEBATE_ROUND_PROMPT = """Это последние мнения других агентов:
+DEBATE_ROUND_PROMPT = """These are the latest opinions from the other agents:
 
 {peer_responses}
 
-Это твое последнее мнение:
+This is your latest opinion:
 {own_response}
 
-Используй эти мнения как дополнительный материал. Пересмотри свой ответ и дай финальный ответ на задачу:
+Use these opinions as additional input. Reconsider your answer and provide your final answer to the task:
 {input}"""
 
 
