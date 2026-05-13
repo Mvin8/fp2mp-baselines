@@ -23,6 +23,8 @@ export FP2MP_CHAT_URL="..."
 - `CotBaseline`
 - `ReactBaseline` с `ddgs_tool`
 - `GeneratorCriticBaseline`
+- `MajorVoteBaseline`
+- `DebateBaseline`
 - `BlackboardBaseline`
 
 Все бейзлайны хранят скомпилированный LangGraph в `baseline.graph`. Полный результат доступен через `invoke_state(...)`, который вызывает `graph.invoke(...)`; в `state["log"]` сохраняются сообщения агентов и ответы модели.
@@ -54,11 +56,20 @@ print(state["log"])
 Замена архитектуры:
 
 ```python
-from fp2mp_baselines import CotBaseline, ReactBaseline, GeneratorCriticBaseline, BlackboardBaseline
+from fp2mp_baselines import (
+    BlackboardBaseline,
+    CotBaseline,
+    DebateBaseline,
+    GeneratorCriticBaseline,
+    MajorVoteBaseline,
+    ReactBaseline,
+)
 
 cot = CotBaseline(llm=llm)
 react = ReactBaseline(llm=llm)
 generator_critic = GeneratorCriticBaseline(generator_llm=llm)
+major_vote = MajorVoteBaseline(llm=llm, num_agents=5)
+debate = DebateBaseline(llm=llm, num_agents=5, debate_rounds=5)
 blackboard = BlackboardBaseline(llm=llm, iterations=3)
 ```
 
@@ -68,6 +79,8 @@ blackboard = BlackboardBaseline(llm=llm, iterations=3)
 - `fp2mp_baselines/cot/` - Chain-of-Thought style baseline
 - `fp2mp_baselines/react/` - ReAct baseline с поиском DuckDuckGo
 - `fp2mp_baselines/generator_critic/` - Generator-Critic baseline
+- `fp2mp_baselines/major_vote/` - Majority Voting baseline
+- `fp2mp_baselines/debate/` - Multi-Agent Debate baseline
 - `fp2mp_baselines/blackboard/` - Blackboard baseline
 - `fp2mp_baselines/state.py` - общие state-типы
 - `fp2mp_baselines/graph_utils.py` - общее логирование LLM-вызовов
@@ -81,3 +94,5 @@ blackboard = BlackboardBaseline(llm=llm, iterations=3)
 - `3_react_baseline.ipynb`
 - `4_generator_critic_baseline.ipynb`
 - `5_blackboard_baseline.ipynb`
+- `6_major_vote_baseline.ipynb`
+- `7_debate_baseline.ipynb`

@@ -28,6 +28,21 @@ class GeneratorCriticState(BaseState, total=False):
     critique: str
 
 
+class MajorVoteState(BaseState, total=False):
+    """State for Majority Voting baselines."""
+
+    agent_responses: list[str]
+    vote_counts: dict[str, int]
+
+
+class DebateState(BaseState, total=False):
+    """State for Multi-Agent Debate baselines."""
+
+    agent_responses: list[str]
+    rounds: list[list[str]]
+    vote_counts: dict[str, int]
+
+
 class BlackboardState(BaseState, total=False):
     """State for Blackboard baselines."""
 
@@ -40,6 +55,8 @@ __all__ = [
     "BaseState",
     "BlackboardState",
     "CotState",
+    "DebateState",
     "GeneratorCriticState",
+    "MajorVoteState",
     "ReactState",
 ]
